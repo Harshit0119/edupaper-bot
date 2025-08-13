@@ -213,8 +213,8 @@ def run_bot():
     app.add_handler(CallbackQueryHandler(btech_branch_selected, pattern='^branch_'))
     app.add_handler(CallbackQueryHandler(send_static_link, pattern='^static_link$'))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_feedback))
-
-    logger.info("✅ Bot is running...")
+    
+    logger.info("🔁 Starting Telegram bot polling...")
     app.run_polling()
 
 # Start both Flask and bot
