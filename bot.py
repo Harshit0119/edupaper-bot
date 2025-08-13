@@ -3,6 +3,14 @@ import mysql.connector
 from dotenv import load_dotenv
 from flask import Flask
 import threading
+import logging 
+
+# ✅ Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -39,6 +47,8 @@ user_data = {}
 
 # Bot handlers (same as before)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    logger.info(f"/start triggered by {user.username} ({user.id})")
     keyboard = [
         [InlineKeyboardButton("Class 10", callback_data='class10')],
         [InlineKeyboardButton("Class 12", callback_data='class12')],
@@ -169,15 +179,15 @@ async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("🙏 Thank you for your feedback! It helps us improve.")
             user_data[telegram_id]['awaiting_feedback'] = False
         except Exception as e:
-            print(f"Error saving feedback: {e}")
-            await update.message.reply_text("⚠️ Sorry, something went wrong while saving your feedback.")
+         logger.error(f"Error saving feedback: {e}")
+         await update.message.reply_text("⚠️ Sorry, something went wrong while saving your feedback.")
 
 # Flask app to satisfy Render's Web Service requirement
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return "EduPaper Bot is running!"
+@app.route('/health')
+def health():
+    return "EduPaper Bot is running!", 200
 
 # Run bot in background thread
 import asyncio
