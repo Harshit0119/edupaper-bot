@@ -175,12 +175,14 @@ async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             feedback_text = update.message.text
             name = update.message.from_user.full_name
-
+            
+            cursor = db.cursor()
             cursor.execute(
                 "INSERT INTO feedback (telegram_id, username, feedback) VALUES (%s, %s, %s)",
                 (telegram_id, name, feedback_text)
             )
             db.commit()
+            cursor.close()
 
             await update.message.reply_text("🙏 Thank you for your feedback! It helps us improve.")
             user_data[telegram_id]['awaiting_feedback'] = False
