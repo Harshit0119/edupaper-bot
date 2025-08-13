@@ -1,5 +1,5 @@
 import os
-import mysql.connector
+import psycopg2
 from dotenv import load_dotenv
 from flask import Flask
 import threading
@@ -26,22 +26,27 @@ from telegram.ext import (
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+PGHOST = os.getenv("PGHOST")
+PGPORT = os.getenv("PGPORT")
+PGUSER = os.getenv("PGUSER")
+PGPASSWORD = os.getenv("PGPASSWORD")
+PGDATABASE = os.getenv("PGDATABASE")
 
-# Connect to MySQL
-db = mysql.connector.connect(
-    host=DB_HOST,
-    port=int(DB_PORT or 3306),
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME,
-    connection_timeout=10
-)
-cursor = db.cursor()
+# connect to postgresql
+try:
+    db = psycopg2.connect(
+        host=PGHOST,
+        port=int(PGPORT or 5432),
+        user=PGUSER,
+        password=PGPASSWORD,
+        dbname=PGDATABASE,
+        sslmode="require"
+    )
+    cursor = db.cursor()
+    logger.info("✅ Connected to Neon PostgreSQL")
+except Exception as e:
+    logger.error(f"❌ PostgreSQL connection failed: {e}")
+    db = None
 
 # Store user state
 user_data = {}
