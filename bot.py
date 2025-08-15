@@ -175,20 +175,30 @@ async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             feedback_text = update.message.text
             name = update.message.from_user.full_name
-            
-            cursor = db.cursor()
-            cursor.execute(
+
+            # 🔄 Create a fresh connection for each feedback
+            conn = psycopg2.connect(
+                host=PGHOST,
+                port=int(PGPORT or 5432),
+                user=PGUSER,
+                password=PGPASSWORD,
+                dbname=PGDATABASE,
+                sslmode="require"
+            )
+            cur = conn.cursor()
+            cur.execute(
                 "INSERT INTO feedback (telegram_id, username, feedback) VALUES (%s, %s, %s)",
                 (telegram_id, name, feedback_text)
             )
-            db.commit()
-            cursor.close()
+            conn.commit()
+            cur.close()
+            conn.close()
 
             await update.message.reply_text("🙏 Thank you for your feedback! It helps us improve.")
             user_data[telegram_id]['awaiting_feedback'] = False
         except Exception as e:
-         logger.error(f"Error saving feedback: {e}")
-         await update.message.reply_text("⚠️ Sorry, something went wrong while saving your feedback.")
+            logger.error(f"Error saving feedback: {e}")
+            await update.message.reply_text("⚠️ Sorry, something went wrong while saving your feedback.")
 
 # Flask app to satisfy Render's Web Service requirement
 app = Flask(__name__)
