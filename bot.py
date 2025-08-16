@@ -171,14 +171,15 @@ async def send_static_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_id = update.message.from_user.id
-    logger.info(f"📩 Received feedback message from {telegram_id}")
+    feedback_text = update.message.text
+    name = update.message.from_user.full_name
 
+    logger.info(f"📩 Received message from {telegram_id}: {feedback_text}")
+
+    # Check if user is marked as awaiting feedback
     if user_data.get(telegram_id, {}).get('awaiting_feedback'):
         logger.info("✅ User is awaiting feedback")
         try:
-            feedback_text = update.message.text
-            name = update.message.from_user.full_name
-
             conn = psycopg2.connect(
                 host=PGHOST,
                 port=int(PGPORT or 5432),
@@ -202,7 +203,12 @@ async def handle_feedback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"❌ Error saving feedback: {e}")
             await update.message.reply_text("⚠️ Sorry, something went wrong while saving your feedback.")
     else:
-        logger.info("⚠️ User not marked as awaiting feedback")
+        logger.info("⚠️ Feedback received before flow completion")
+        await update.message.reply_text(
+            "⚠️ Please choose your course and subject first.\n"
+            "You can give feedback after accessing the study material.\n\n"
+            "👉 Type /start to begin."
+        )
 
 
 # Flask app to satisfy Render's Web Service requirement
